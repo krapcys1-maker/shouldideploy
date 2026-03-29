@@ -1,7 +1,7 @@
 // index.tsx
 import React, { useEffect, useState } from 'react'
-import Head from 'next/head'
 import { useRouter } from 'next/router'
+import Head from 'next/head'
 import { shouldIDeploy, getBaseUrl } from '../helpers/constants'
 import Time from '../helpers/time'
 import Widget from '../component/widget'
@@ -26,14 +26,11 @@ const isValidCustomDate = (date?: string): date is string => {
 
 const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
   const router = useRouter()
-  const queryTimezone =
-    typeof router.query.tz === 'string' && Time.zoneExists(router.query.tz)
-      ? router.query.tz
-      : tz
-  const [timezone, setTimezone] = useState<string>(queryTimezone)
-  const [now, setNow] = useState<any>(
-    new Time(queryTimezone, initialNow.customDate)
-  )
+  const queryTz = router.query.tz
+  const resolvedTz =
+    typeof queryTz === 'string' && Time.zoneExists(queryTz) ? queryTz : tz
+  const [timezone, setTimezone] = useState<string>(resolvedTz)
+  const [now, setNow] = useState<any>(new Time(resolvedTz, initialNow.customDate))
   const [theme, setTheme] = useState<ThemeType>(Theme.Light)
 
   useEffect(() => {
