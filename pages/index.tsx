@@ -15,6 +15,15 @@ interface IPage {
   initialReason: string
 }
 
+const isValidCustomDate = (date?: string): date is string => {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return false
+  }
+
+  const parsedDate = new Date(`${date}T00:00:00Z`)
+  return !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().startsWith(date)
+}
+
 const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
   const router = useRouter()
   const [timezone, setTimezone] = useState<string>(tz)
@@ -38,6 +47,15 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
     }
   }, [])
 
+  useEffect(() => {
+    const customDate =
+      typeof router.query.date === 'string' && isValidCustomDate(router.query.date)
+        ? router.query.date
+        : undefined
+
+    setNow(new Time(timezone, customDate))
+  }, [router.query.date, timezone])
+
   const applyTheme = (newTheme: ThemeType) => {
     document.documentElement.setAttribute('data-theme', newTheme)
   }
@@ -60,13 +78,9 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
     router.push(newUrl.pathname + newUrl.search)
 
     setTimezone(newTimezone)
-    setNow(new Time(newTimezone))
   }
 
   const { t } = useTranslation()
-  const customDate = typeof router.query.date === 'string' ? router.query.date : undefined
-  const displayedTime = customDate ? new Time(timezone, customDate) : now
-  const displayedReason = initialReason
 
   return (
     <>
@@ -76,8 +90,8 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
         <link rel="icon" href="/api/favicon" />
         <meta property="og:image" content={`${getBaseUrl()}/api/og`} />
       </Head>
-      <div className={`wrapper ${!shouldIDeploy(displayedTime) && 'its-friday'}`}>
-        <Widget reason={displayedReason} now={displayedTime} />
+      <div className={`wrapper ${!shouldIDeploy(now) && 'its-friday'}`}>
+        <Widget reason={initialReason} now={now} />
         <div className="meta">
           <Footer
             timezone={timezone}
