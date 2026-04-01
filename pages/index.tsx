@@ -64,9 +64,14 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
   }
 
   const { t } = useTranslation()
-  const customDate = typeof router.query.date === 'string' ? router.query.date : undefined
-  const displayedTime = customDate ? new Time(timezone, customDate) : now
-  const displayedReason = initialReason
+  const rawDate = typeof router.query.date === 'string' ? router.query.date : undefined
+  const customDate = rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) && !isNaN(Date.parse(rawDate)) ? rawDate : undefined
+
+  useEffect(() => {
+    if (customDate) {
+      setNow(new Time(timezone, customDate))
+    }
+  }, [customDate, timezone])
 
   return (
     <>
@@ -76,8 +81,8 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
         <link rel="icon" href="/api/favicon" />
         <meta property="og:image" content={`${getBaseUrl()}/api/og`} />
       </Head>
-      <div className={`wrapper ${!shouldIDeploy(displayedTime) && 'its-friday'}`}>
-        <Widget reason={displayedReason} now={displayedTime} />
+      <div className={`wrapper ${!shouldIDeploy(now) && 'its-friday'}`}>
+        <Widget reason={initialReason} now={now} />
         <div className="meta">
           <Footer
             timezone={timezone}
