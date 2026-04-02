@@ -26,9 +26,13 @@ const isValidCustomDate = (date?: string): date is string => {
 
 const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
   const router = useRouter()
-  const [timezone, setTimezone] = useState<string>(tz)
+  const queryTimezone =
+    typeof router.query.tz === 'string' && Time.zoneExists(router.query.tz)
+      ? router.query.tz
+      : tz
+  const [timezone, setTimezone] = useState<string>(queryTimezone)
   const [now, setNow] = useState<any>(
-    new Time(initialNow.timezone, initialNow.customDate)
+    new Time(queryTimezone, initialNow.customDate)
   )
   const [theme, setTheme] = useState<ThemeType>(Theme.Light)
 
@@ -54,7 +58,7 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
         : undefined
 
     setNow(new Time(timezone, customDate))
-  }, [router.query.date, timezone])
+  }, [router.query.date])
 
   const applyTheme = (newTheme: ThemeType) => {
     document.documentElement.setAttribute('data-theme', newTheme)
@@ -78,6 +82,7 @@ const Page: React.FC<IPage> = ({ tz, now: initialNow, initialReason }) => {
     router.push(newUrl.pathname + newUrl.search)
 
     setTimezone(newTimezone)
+    setNow(new Time(newTimezone))
   }
 
   const { t } = useTranslation()
